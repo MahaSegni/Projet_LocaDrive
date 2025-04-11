@@ -1,0 +1,42 @@
+erDiagram
+    CLIENT ||--o{ COMMANDE : passe
+    ADMINISTRATEUR ||--o{ VEHICULE : gere
+    COMMANDE ||--|{ LIGNE_RESERVATION : contient
+    VEHICULE ||--o{ LIGNE_RESERVATION : reserve_dans
+
+    CLIENT {
+        int id
+        string email
+        string motDePasse
+        string nom
+        string prenom
+        date dateObtentionPermis
+    }
+
+    ADMINISTRATEUR {
+        int id
+        string email
+        string motDePasse
+        string nom
+        string prenom
+    }
+
+    VEHICULE {
+        int id
+        string marque
+        string modele
+        float tarifParJour
+    }
+
+    COMMANDE {
+        int id
+        enum statut
+        datetime dateCreation
+        string modePaiement
+    }
+
+    LIGNE_RESERVATION {
+        int id
+        date dateDebut
+        date dateFin
+    }
