@@ -1,11 +1,7 @@
 <?php
-
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use App\Application\Enum\StatutReservation;
 
 #[ORM\Entity]
 class Reservation
@@ -15,29 +11,29 @@ class Reservation
     #[ORM\Column(type: "integer")]
     private int $id;
 
-    #[ORM\Column(type: "string", enumType: StatutReservation::class)]
-    private StatutReservation $statut;
+    #[ORM\Column(type: "date")]
+    private \DateTimeInterface $dateDebut;
 
-    #[ORM\Column(type: "datetime")]
-    private \DateTimeInterface $dateCreation;
+    #[ORM\Column(type: "date")]
+    private \DateTimeInterface $dateFin;
 
-    #[ORM\Column(type: "string")]
-    private string $modePaiement;
-
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: Commande::class, inversedBy: "reservations")]
     #[ORM\JoinColumn(nullable: false)]
-    private User $client;
+    private Commande $commande;
 
-    #[ORM\OneToMany(mappedBy: "reservation", targetEntity: LigneReservation::class, cascade: ['persist', 'remove'])]
-    private Collection $lignes;
+    #[ORM\ManyToOne(targetEntity: Vehicle::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private Vehicle $vehicule;
 
-    public function __construct(User $client, string $modePaiement)
+    public function __construct(Vehicle $vehicule, \DateTimeInterface $dateDebut, \DateTimeInterface $dateFin)
     {
-        $this->client = $client;
-        $this->dateCreation = new \DateTimeImmutable();
-        $this->modePaiement = $modePaiement;
-        $this->statut = StatutReservation::EN_ATTENTE;
-        $this->lignes = new ArrayCollection();
+        if ($dateFin < $dateDebut) {
+            throw new \InvalidArgumentException("La date de fin doit être postérieure à la date de début.");
+        }
+
+        $this->vehicule = $vehicule;
+        $this->dateDebut = $dateDebut;
+        $this->dateFin = $dateFin;
     }
 
     public function getId(): int
@@ -45,39 +41,28 @@ class Reservation
         return $this->id;
     }
 
-    public function getStatut(): StatutReservation
+    public function getDateDebut(): \DateTimeInterface
     {
-        return $this->statut;
+        return $this->dateDebut;
     }
 
-    public function setStatut(StatutReservation $statut): void
+    public function getDateFin(): \DateTimeInterface
     {
-        $this->statut = $statut;
+        return $this->dateFin;
     }
 
-    public function getDateCreation(): \DateTimeInterface
+    public function getVehicule(): Vehicle
     {
-        return $this->dateCreation;
+        return $this->vehicule;
     }
 
-    public function getModePaiement(): string
+    public function getCommande(): Commande
     {
-        return $this->modePaiement;
+        return $this->commande;
     }
 
-    public function getClient(): User
+    public function setCommande(Commande $commande): void
     {
-        return $this->client;
-    }
-
-    public function getLignes(): Collection
-    {
-        return $this->lignes;
-    }
-
-    public function addLigne(LigneReservation $ligne): void
-    {
-        $this->lignes->add($ligne);
-        $ligne->setReservation($this);
+        $this->commande = $commande;
     }
 }
