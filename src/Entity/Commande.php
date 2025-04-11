@@ -82,4 +82,25 @@ class Commande
             $reservation->setCommande($this);
         }
     }
+    public function annuler(): void
+    {
+        if (!in_array($this->statut, [StatutCommande::CART, StatutCommande::EN_ATTENTE])) {
+            throw new \LogicException("Cette commande ne peut pas être annulée.");
+        }
+
+        $this->statut = StatutCommande::ANNULEE;
+    }
+    public function confirmer(): void
+    {
+        if ($this->statut !== StatutCommande::CART) {
+            throw new \LogicException("Seules les commandes en 'panier' peuvent être confirmées.");
+        }
+
+        $this->statut = StatutCommande::VALIDEE;
+    }
+    public function ajouterReservation(Vehicle $vehicule, \DateTimeImmutable $dateDebut, \DateTimeImmutable $dateFin): void
+    {
+        $reservation = new Reservation($vehicule, $dateDebut, $dateFin);
+        $this->reservations->add($reservation);
+    }
 }

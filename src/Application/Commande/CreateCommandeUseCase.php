@@ -15,7 +15,6 @@ class CreateCommandeUseCase
     public function execute(User $client, string $modePaiement, array $lignesData): Commande
     {
         $commande = new Commande($client, $modePaiement);
-        $commande->setStatut(StatutCommande::CART);
 
         foreach ($lignesData as $ligne) {
             $vehicule = $this->em->getRepository(Vehicle::class)->find($ligne['vehicle_id']);
@@ -26,8 +25,7 @@ class CreateCommandeUseCase
             $dateDebut = new \DateTimeImmutable($ligne['dateDebut']);
             $dateFin = new \DateTimeImmutable($ligne['dateFin']);
 
-            $reservation = new Reservation($vehicule, $dateDebut, $dateFin);
-            $commande->addReservation($reservation);
+            $commande->ajouterReservation($vehicule, $dateDebut, $dateFin);
         }
 
         $this->em->persist($commande);

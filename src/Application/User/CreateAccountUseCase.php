@@ -9,11 +9,8 @@ class CreateAccountUseCase
 {
     public function __construct(
         private UserRepository $userRepository,
-        private UserPasswordHasherInterface $passwordHasher,
-    ) {
-        $this->userRepository = $userRepository;
-        $this->passwordHasher = $passwordHasher;
-    }
+        private UserPasswordHasherInterface $passwordHasher
+    ) {}
 
     public function execute(
         string $email,
@@ -26,16 +23,8 @@ class CreateAccountUseCase
             throw new \InvalidArgumentException("L'email est déjà utilisé.");
         }
 
-        $user = new User(
-            email: $email,
-            nom: $nom,
-            prenom: $prenom,
-            dateObtentionPermis: $dateObtentionPermis
-        );
-
-        $motDePasseHashed = $this->passwordHasher->hashPassword($user, $motDePasse);
-        $user->setPassword($motDePasseHashed);
-        $user->setRoles(['ROLE_CLIENT']);
+        $user = new User($email, $nom, $prenom, $dateObtentionPermis);
+        $user->initialiserMotDePasse($this->passwordHasher, $motDePasse);
 
         $this->userRepository->save($user);
     }

@@ -2,6 +2,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -141,4 +142,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->email;
     }
+    public function initialiserMotDePasse(UserPasswordHasherInterface $passwordHasher, string $motDePasse): void
+    {
+        $this->password = $passwordHasher->hashPassword($this, $motDePasse);
+    }
+
+
 }

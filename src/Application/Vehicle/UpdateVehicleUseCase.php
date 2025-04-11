@@ -16,17 +16,10 @@ class UpdateVehicleUseCase
         $vehicle = $this->repository->findById($id);
 
         if (!$vehicle) {
-            throw new \InvalidArgumentException('Vehicle not found');
+            throw new \InvalidArgumentException('Véhicule non trouvé.');
         }
 
-        if (empty($brand) || empty($model) || $dailyRate <= 0) {
-            throw new \InvalidArgumentException('Invalid vehicle data');
-        }
-
-        $vehicle->setBrand($brand);
-        $vehicle->setModel($model);
-        $vehicle->setDailyRate($dailyRate);
-
+        $vehicle->mettreAJour($brand, $model, $dailyRate);
         $this->repository->update($vehicle);
     }
 }
