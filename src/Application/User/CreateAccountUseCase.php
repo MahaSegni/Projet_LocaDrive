@@ -22,11 +22,6 @@ class CreateAccountUseCase
         string $prenom,
         \DateTimeInterface $dateObtentionPermis
     ): void {
-        // Validation des règles métier
-        if (!preg_match('/^(?=(?:.[a-zA-Z]){4,})(?=(?:.\d){4,}).{8,}$/', $motDePasse)) {
-            throw new \InvalidArgumentException("Le mot de passe doit contenir au moins 8 caractères avec 4 lettres et 4 chiffres.");
-        }
-
         if ($this->userRepository->existsByEmail($email)) {
             throw new \InvalidArgumentException("L'email est déjà utilisé.");
         }

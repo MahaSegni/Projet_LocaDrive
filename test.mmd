@@ -1,8 +1,8 @@
 erDiagram
     CLIENT ||--o{ COMMANDE : passe
     ADMINISTRATEUR ||--o{ VEHICULE : gere
-    COMMANDE ||--|{ LIGNE_RESERVATION : contient
-    VEHICULE ||--o{ LIGNE_RESERVATION : reserve_dans
+    COMMANDE ||--|{ RESERVATION : contient
+    VEHICULE ||--o{ RESERVATION : reserve_dans
 
     CLIENT {
         int id
@@ -33,10 +33,12 @@ erDiagram
         enum statut
         datetime dateCreation
         string modePaiement
+        float TotaleCommande
     }
 
     RESERVATION {
         int id
         date dateDebut
         date dateFin
+        float TotaleReservation
     }

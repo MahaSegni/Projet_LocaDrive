@@ -41,7 +41,7 @@ class UserController extends AbstractController
     public function createAdmin(UserPasswordHasherInterface $hasher, EntityManagerInterface $em): JsonResponse
     {
         $admin = new User(
-            email: 'admin@example.com',
+            email: 'admin2@example.com',
             nom: 'Admin',
             prenom: 'Boss',
             dateObtentionPermis: new \DateTimeImmutable('2000-01-01')

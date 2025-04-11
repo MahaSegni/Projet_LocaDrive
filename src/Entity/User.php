@@ -39,7 +39,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         ?\DateTimeInterface $dateObtentionPermis = null,
         array $roles = ['ROLE_USER']
     ) {
-        $this->email = $email;
+        $this->setEmail($email);
         $this->nom = $nom;
         $this->prenom = $prenom;
         $this->dateObtentionPermis = $dateObtentionPermis;
@@ -58,6 +58,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setEmail(string $email): void
     {
+        // On pourrait ajouter une validation d'email ici si nécessaire
         $this->email = $email;
     }
 
@@ -71,9 +72,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->motDePasse;
     }
 
-    public function setPassword(string $hashed): void
+    public function setPassword(string $motDePasse): void
     {
-        $this->motDePasse = $hashed;
+        // Si le mot de passe n'est pas déjà hashé, on le valide
+        if (substr($motDePasse, 0, 1) !== '$') {
+            $this->validateMotDePasse($motDePasse);
+        }
+
+        $this->motDePasse = $motDePasse;
+    }
+
+    /**
+     * Valide le format du mot de passe selon les règles métier
+     */
+    private function validateMotDePasse(string $motDePasse): void
+    {
+        if (!preg_match('/^(?=(?:.[a-zA-Z]){4,})(?=(?:.\d){4,}).{8,}$/', $motDePasse)) {
+            throw new \InvalidArgumentException("Le mot de passe doit contenir au moins 8 caractères avec 4 lettres et 4 chiffres.");
+        }
     }
 
     public function getRoles(): array
