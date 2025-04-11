@@ -5,6 +5,7 @@ use App\Entity\Commande;
 use App\Entity\User;
 use App\Application\Enum\StatutCommande;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -12,11 +13,12 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class CommandeRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry,private EntityManagerInterface $em)
     {
         parent::__construct($registry, Commande::class);
+        $this->em = $em;
     }
-
+  
     /**
      * Lister les commandes d'un client (optionnellement par statut)
      */
@@ -49,8 +51,8 @@ class CommandeRepository extends ServiceEntityRepository
      */
     public function save(Commande $commande): void
     {
-        $this->_em->persist($commande);
-        $this->_em->flush();
+        $this->em->persist($commande);
+        $this->em->flush();
     }
 
     /**
@@ -58,7 +60,7 @@ class CommandeRepository extends ServiceEntityRepository
      */
     public function delete(Commande $commande): void
     {
-        $this->_em->remove($commande);
-        $this->_em->flush();
+        $this->em->remove($commande);
+        $this->em->flush();
     }
 }

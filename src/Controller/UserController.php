@@ -14,7 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class UserController extends AbstractController
 {
-    #[Route('/api/account', name: 'create_account', methods: ['POST'])]
+    #[Route('/account', name: 'create_account', methods: ['POST'])]
     public function create_account(Request $request, CreateAccountUseCase $useCase): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
