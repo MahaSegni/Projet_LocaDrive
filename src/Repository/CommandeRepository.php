@@ -63,4 +63,17 @@ class CommandeRepository extends ServiceEntityRepository
         $this->em->remove($commande);
         $this->em->flush();
     }
+    public function findCartByClient(User $client): ?Commande
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.reservations', 'r')
+            ->leftJoin('r.vehicule', 'v')
+            ->addSelect('r', 'v')
+            ->where('c.client = :client')
+            ->andWhere('c.statut = :statut')
+            ->setParameter('client', $client)
+            ->setParameter('statut', StatutCommande::CART)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

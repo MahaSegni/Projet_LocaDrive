@@ -2,6 +2,12 @@
 
 namespace App\Controller;
 
+use App\Application\Assurance\AddInsuranceUseCase;
+use App\Application\Assurance\RemoveInsuranceUseCase;
+use App\Application\Paiement\CompletePaymentUseCase;
+use App\Application\Paiement\UpdatePaymentMethodUseCase;
+use App\Application\Reservation\AddReservationToCommandeUseCase;
+use App\Application\Reservation\RemoveReservationFromCommandeUseCase;
 use App\Entity\Commande;
 use App\Entity\User;
 use App\Application\Enum\StatutCommande;
@@ -103,5 +109,152 @@ class CommandeController extends AbstractController
         }, $commandes);
 
         return $this->json($data);
+    }
+    #[Route('/api/commandes/{id}/reservations', name: 'add_reservation', methods: ['POST'])]
+    public function addReservation(
+        Commande $commande,
+        Request $request,
+        AddReservationToCommandeUseCase $useCase
+    ): JsonResponse {
+        $client = $this->getUser();
+        $data = json_decode($request->getContent(), true);
+
+        try {
+            $reservation = $useCase->execute(
+                $client,
+                $commande->getId(),
+                $data['vehiculeId'] ?? 0,
+                $data['dateDebut'] ?? '',
+                $data['dateFin'] ?? ''
+            );
+
+            return $this->json([
+                'message' => 'Véhicule ajouté à la réservation',
+                'reservationId' => $reservation->getId(),
+                'prixReservation' => $reservation->getPrice(),
+                'prixTotalCommande' => $commande->getTotalPrice()
+            ], 201);
+
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/commandes/{commandeId}/reservations/{reservationId}', name: 'remove_reservation', methods: ['DELETE'])]
+    public function removeReservation(
+        int $commandeId,
+        int $reservationId,
+        RemoveReservationFromCommandeUseCase $useCase
+    ): JsonResponse {
+        $client = $this->getUser();
+
+        try {
+            $commande = $useCase->execute($client, $commandeId, $reservationId);
+
+            return $this->json([
+                'message' => 'Véhicule retiré de la réservation',
+                'prixTotalCommande' => $commande->getTotalPrice()
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/commandes/{commandeId}/reservations/{reservationId}/assurance', name: 'add_insurance', methods: ['POST'])]
+    public function addInsurance(
+        int $commandeId,
+        int $reservationId,
+        AddInsuranceUseCase $useCase
+    ): JsonResponse {
+        $client = $this->getUser();
+
+        try {
+            $prixTotal = $useCase->execute($client, $commandeId, $reservationId);
+
+            return $this->json([
+                'message' => 'Assurance ajoutée à la réservation',
+                'prixTotalCommande' => $prixTotal
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/commandes/{commandeId}/reservations/{reservationId}/assurance', name: 'remove_insurance', methods: ['DELETE'])]
+    public function removeInsurance(
+        int $commandeId,
+        int $reservationId,
+        RemoveInsuranceUseCase $useCase
+    ): JsonResponse {
+        $client = $this->getUser();
+
+        try {
+            $prixTotal = $useCase->execute($client, $commandeId, $reservationId);
+
+            return $this->json([
+                'message' => 'Assurance retirée de la réservation',
+                'prixTotalCommande' => $prixTotal
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/commandes/{id}/mode-paiement', name: 'update_payment_method', methods: ['PUT'])]
+    public function updatePaymentMethod(
+        Commande $commande,
+        Request $request,
+        UpdatePaymentMethodUseCase $useCase
+    ): JsonResponse {
+        $client = $this->getUser();
+        $data = json_decode($request->getContent(), true);
+
+        try {
+            $useCase->execute($client, $commande->getId(), $data['modePaiement'] ?? 'CB');
+
+            return $this->json([
+                'message' => 'Mode de paiement mis à jour',
+                'prixTotal' => $commande->getTotalPrice()
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/commandes/{id}/payer', name: 'complete_payment', methods: ['POST'])]
+    public function completePayment(
+        Commande $commande,
+        CompletePaymentUseCase $useCase
+    ): JsonResponse {
+        $client = $this->getUser();
+
+        try {
+            $totalPrice = $useCase->execute($client, $commande->getId());
+
+            return $this->json([
+                'message' => 'Paiement effectué avec succès',
+                'montantTotal' => $totalPrice,
+                'statut' => StatutCommande::VALIDEE->value
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        }
     }
 }

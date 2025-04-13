@@ -1,8 +1,8 @@
 <?php
+
 namespace App\Controller;
 
 use App\Application\User\CreateAccountUseCase;
-
 use App\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -36,113 +36,137 @@ class UserController extends AbstractController
         }
     }
 
-
     #[Route('/create-admin', name: 'create_admin', methods: ['GET'])]
     public function createAdmin(UserPasswordHasherInterface $hasher, EntityManagerInterface $em): JsonResponse
     {
-        $admin = new User(
-            email: 'admin2@example.com',
-            nom: 'Admin',
-            prenom: 'Boss',
-            dateObtentionPermis: new \DateTimeImmutable('2000-01-01')
-        );
+        try {
+            $admin = new User(
+                email: 'admintest@example.com',
+                nom: 'Admin',
+                prenom: 'Boss',
+                dateObtentionPermis: new \DateTimeImmutable('2000-01-01')
+            );
 
-        $hashedPassword = $hasher->hashPassword($admin, 'Admin1234');
-        $admin->setPassword($hashedPassword);
-        $admin->setRoles(['ROLE_ADMIN']);
+            $hashedPassword = $hasher->hashPassword($admin, 'Admin1234');
+            $admin->setPassword($hashedPassword);
+            $admin->setRoles(['ROLE_ADMIN']);
 
-        $em->persist($admin);
-        $em->flush();
+            $em->persist($admin);
+            $em->flush();
 
-        return $this->json(['message' => 'Admin created', 'email' => $admin->getEmail()]);
+            return $this->json(['message' => 'Admin created', 'email' => $admin->getEmail()]);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Server error: ' . $e->getMessage()], 500);
+        }
     }
-
 
     #[Route('/api/profile', name: 'get_profile', methods: ['GET'])]
     public function getProfile(): JsonResponse
     {
-        $user = $this->getUser();
+        try {
+            $user = $this->getUser();
 
-        return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'nom' => $user->getNom(),
-            'prenom' => $user->getPrenom(),
-            'datePermis' => $user->getDateObtentionPermis()->format('Y-m-d'),
-            'roles' => $user->getRoles()
-        ]);
+            return $this->json([
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'nom' => $user->getNom(),
+                'prenom' => $user->getPrenom(),
+                'datePermis' => $user->getDateObtentionPermis()->format('Y-m-d'),
+                'roles' => $user->getRoles()
+            ]);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Server error: ' . $e->getMessage()], 500);
+        }
     }
 
     #[Route('/api/profile', name: 'update_profile', methods: ['PUT'])]
     public function updateProfile(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $user = $this->getUser();
-        $data = json_decode($request->getContent(), true);
+        try {
+            $user = $this->getUser();
+            $data = json_decode($request->getContent(), true);
 
-        if (isset($data['nom'])) $user->setNom($data['nom']);
-        if (isset($data['prenom'])) $user->setPrenom($data['prenom']);
-        if (isset($data['datePermis'])) {
-            $user->setDateObtentionPermis(new \DateTimeImmutable($data['datePermis']));
+            if (isset($data['nom'])) $user->setNom($data['nom']);
+            if (isset($data['prenom'])) $user->setPrenom($data['prenom']);
+            if (isset($data['datePermis'])) {
+                $user->setDateObtentionPermis(new \DateTimeImmutable($data['datePermis']));
+            }
+
+            $em->flush();
+            return $this->json(['message' => 'Profile updated']);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Server error: ' . $e->getMessage()], 500);
         }
-
-        $em->flush();
-        return $this->json(['message' => 'Profile updated']);
     }
-
 
     #[Route('/api/admin/users', name: 'admin_list_users', methods: ['GET'])]
     public function listUsers(EntityManagerInterface $em): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
-        $users = $em->getRepository(User::class)->findAll();
+        try {
+            $this->denyAccessUnlessGranted('ROLE_ADMIN');
+            $users = $em->getRepository(User::class)->findAll();
 
-        $data = array_map(fn($u) => [
-            'id' => $u->getId(),
-            'email' => $u->getEmail(),
-            'nom' => $u->getNom(),
-            'prenom' => $u->getPrenom(),
-            'roles' => $u->getRoles()
-        ], $users);
+            $data = array_map(fn($u) => [
+                'id' => $u->getId(),
+                'email' => $u->getEmail(),
+                'nom' => $u->getNom(),
+                'prenom' => $u->getPrenom(),
+                'roles' => $u->getRoles()
+            ], $users);
 
-        return $this->json($data);
+            return $this->json($data);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Server error: ' . $e->getMessage()], 500);
+        }
     }
 
     #[Route('/api/admin/users/{id}', name: 'admin_get_user', methods: ['GET'])]
     public function getUserById(User $user): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        try {
+            $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
-        return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'nom' => $user->getNom(),
-            'prenom' => $user->getPrenom(),
-            'roles' => $user->getRoles()
-        ]);
+            return $this->json([
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'nom' => $user->getNom(),
+                'prenom' => $user->getPrenom(),
+                'roles' => $user->getRoles()
+            ]);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Server error: ' . $e->getMessage()], 500);
+        }
     }
 
     #[Route('/api/admin/users/{id}', name: 'admin_update_user', methods: ['PUT'])]
     public function updateUser(User $user, Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
-        $data = json_decode($request->getContent(), true);
+        try {
+            $this->denyAccessUnlessGranted('ROLE_ADMIN');
+            $data = json_decode($request->getContent(), true);
 
-        if (isset($data['nom'])) $user->setNom($data['nom']);
-        if (isset($data['prenom'])) $user->setPrenom($data['prenom']);
-        if (isset($data['roles'])) $user->setRoles($data['roles']);
+            if (isset($data['nom'])) $user->setNom($data['nom']);
+            if (isset($data['prenom'])) $user->setPrenom($data['prenom']);
+            if (isset($data['roles'])) $user->setRoles($data['roles']);
 
-        $em->flush();
-        return $this->json(['message' => 'User updated']);
+            $em->flush();
+            return $this->json(['message' => 'User updated']);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Server error: ' . $e->getMessage()], 500);
+        }
     }
 
     #[Route('/api/admin/users/{id}', name: 'admin_delete_user', methods: ['DELETE'])]
     public function deleteUser(User $user, EntityManagerInterface $em): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
-        $em->remove($user);
-        $em->flush();
+        try {
+            $this->denyAccessUnlessGranted('ROLE_ADMIN');
+            $em->remove($user);
+            $em->flush();
 
-        return $this->json(['message' => 'User deleted']);
+            return $this->json(['message' => 'User deleted']);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Server error: ' . $e->getMessage()], 500);
+        }
     }
-
 }
